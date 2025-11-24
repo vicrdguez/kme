@@ -14,6 +14,7 @@ const (
 	MARKUP    = "markup"
 	HIGHLIGHT = "highlight"
 	NOTE      = "note"
+	DOGEAR    = "dogear"
 )
 
 var (
@@ -94,11 +95,13 @@ func AllBookmarks(books []string) []*Bookmarks {
 
 		for _, r := range raws {
 			bm := fromRawValues(r)
-			switch bm.Kind() {
-			case MARKUP:
-				bms.Markups = append(bms.Markups, bm.(*Markup))
-			case HIGHLIGHT:
-				bms.Highlights = append(bms.Highlights, bm.(*Highlight))
+			if bm != nil {
+				switch bm.Kind() {
+				case MARKUP:
+					bms.Markups = append(bms.Markups, bm.(*Markup))
+				case HIGHLIGHT:
+					bms.Highlights = append(bms.Highlights, bm.(*Highlight))
+				}
 			}
 		}
 
@@ -115,7 +118,12 @@ func AllBooks() []string {
 	return []string{}
 }
 
+// DOGEAR items are ignored: nil
 func fromRawValues(kbm koboBookmark) bookmark {
+	// If we can't understand the Type, we can't act on anything so we return early
+	if !kbm.kind.Valid {
+		return nil
+	}
 	orderId := 0.0
 	// assuming a markup
 	bm := &Markup{}
@@ -133,10 +141,11 @@ func fromRawValues(kbm koboBookmark) bookmark {
 	// see "sectionOrder"
 	bm.OrderId = orderId
 
-	if kbm.kind.Valid && kbm.kind.String == MARKUP {
+	switch kbm.kind.String {
+	case MARKUP:
 		return bm
-	}
-	if kbm.kind.Valid && (kbm.kind.String == HIGHLIGHT || kbm.kind.String == NOTE) {
+
+	case HIGHLIGHT, NOTE:
 		if kbm.text.Valid && kbm.color.Valid {
 			text := kbm.text.String
 			col := kbm.color.Int64
@@ -149,6 +158,8 @@ func fromRawValues(kbm koboBookmark) bookmark {
 				color:    int(col),
 			}
 		}
+	default:
+		return nil
 	}
 
 	return nil
