@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
-	"image/png"
 	"kme/internal/bookmark"
 	"os"
 	"path/filepath"
@@ -74,11 +73,14 @@ func OverlayMarkup(m *bookmark.Markup, markPath string, outPath string) error {
 	}
 
 	// new RGBA img for the background, with the intended size: The canvas
-	bgImg := image.NewRGBA(image.Rect(0, 0, WIDTH, HEIGHT))
+	container := image.NewRGBA(image.Rect(0, 0, WIDTH, HEIGHT))
+
+	// b := baseImg.Bounds().Size()
+	draw.Draw(container, container.Bounds(), baseImg, image.Point{}, draw.Src)
 	// Draw the original decoded base img over the background canvas
 	// This will fit the base img into the WxH
 	// Maybe use ApproxBiLinear for better performance if quality does not suffer much
-	draw.BiLinear.Scale(bgImg, bgImg.Bounds(), baseImg, baseImg.Bounds(), draw.Over, nil)
+	// draw.ApproxBiLinear.Scale(container, container.Bounds(), baseImg, baseImg.Bounds(), draw.Over, nil)
 
 	// Add text to the bg img
 	text := fmt.Sprintf("%s/%s", m.Section, m.Location)
@@ -88,7 +90,7 @@ func OverlayMarkup(m *bookmark.Markup, markPath string, outPath string) error {
 	point := fixed.Point26_6{X: fixed.Int26_6(10 * 64), Y: fixed.Int26_6(25 * 64)}
 
 	df := &font.Drawer{
-		Dst:  bgImg,
+		Dst:  container,
 		Src:  image.NewUniform(textColor),
 		Face: basicfont.Face7x13,
 		Dot:  point,
@@ -97,20 +99,31 @@ func OverlayMarkup(m *bookmark.Markup, markPath string, outPath string) error {
 	df.DrawString(text)
 
 	// overlay the markup img with the background img
-	draw.Draw(bgImg, markImg.Bounds(), markImg, image.Point{}, draw.Over)
+	draw.Draw(container, markImg.Bounds(), markImg, image.Point{}, draw.Over)
 
-	out, err := os.Create(filepath.Join(outPath, m.Outfile()))
+	imgPath := filepath.Join(outPath, m.Outfile())
+
+	return encode(imgPath, container)
+}
+
+func encode(outPath string, img *image.RGBA) error {
+	out, err := os.Create(outPath)
 	if err != nil {
 		return fmt.Errorf("Failed to create output file %s: %w", outPath, err)
 	}
 	defer out.Close()
 
 	// encode final image into the output
-	// if BestCompression is too slow, could try with Default or BestSpeed
-	encoder := png.Encoder{CompressionLevel: png.BestCompression}
-	if err := encoder.Encode(out, bgImg); err != nil {
-		return fmt.Errorf("Failed to encode final PNG output to %s: %w", outPath, err)
+	if err := jpeg.Encode(out, img, &jpeg.Options{Quality: 90}); err != nil {
+		return fmt.Errorf("jpeg encode failed: %w", err)
 	}
+
+	// if BestCompression is too slow, could try with Default or BestSpeed
+	// encoder := png.Encoder{CompressionLevel: png.BestCompression}
+	// if err := encoder.Encode(out, bgImg); err != nil {
+	// 	return fmt.Errorf("Failed to encode final PNG output to %s: %w", outPath, err)
+	// }
+
 	fmt.Println("\t Saving final overlay: ", out.Name())
 
 	return nil

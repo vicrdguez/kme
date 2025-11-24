@@ -23,7 +23,7 @@ func (self *Markup) Kind() string {
 
 func (self *Markup) Outfile() string {
 	return fmt.Sprintf(
-		"mk_%s_%s_%s_%f.png",
+		"mk_%s_%s_%s_%f.jpeg",
 		self.Id[:8],
 		self.Section,
 		self.Location,
