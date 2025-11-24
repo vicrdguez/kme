@@ -10,6 +10,7 @@ import (
 	"time"
 
 	pdf "github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
 func BuildPDF(bms *bookmark.Bookmarks, bookDir string, keep bool) error {
@@ -31,12 +32,20 @@ func BuildPDF(bms *bookmark.Bookmarks, bookDir string, keep bool) error {
 		ctime.Format("20060102_1504"),
 		bms.Book,
 	)
+
 	pdfOut := filepath.Join(bookDir, pdfFile)
+	cfg := model.NewDefaultConfiguration()
+	cfg.Optimize = true
+	cfg.OptimizeBeforeWriting = true
+	cfg.OptimizeResourceDicts = true
+	cfg.OptimizeDuplicateContentStreams = true
+	cfg.Cmd = model.OPTIMIZE
+
 	if err := pdf.ImportImagesFile(
 		files,
 		pdfOut,
 		nil,
-		nil,
+		cfg,
 	); err != nil {
 		return err
 	}
