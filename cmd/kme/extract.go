@@ -30,6 +30,11 @@ func extract() *cli.Command {
 				Usage: "Output directory for temporary images and final PDF",
 				Value: OUT_DIR,
 			},
+			&cli.IntFlag{
+				Name:  "quality",
+				Usage: "Sets the quality of the images in the final PDF. [1,100] higher is better",
+				Value: 35,
+			},
 			&cli.BoolFlag{ // By default images are deleted
 				Name:  "keep",
 				Usage: "Keep temporary images",
@@ -70,6 +75,7 @@ func handleExtract(ctx context.Context, cmd *cli.Command) error {
 	sel := cmd.Bool("select")
 	marks := cmd.Bool("markups")
 	highs := cmd.Bool("highlights")
+	quality := cmd.Int("quality")
 	// cpy := cmd.Bool("copy")
 
 	if err := validate(device, dbPath, markPath, out, keep, sel); err != nil {
@@ -109,11 +115,11 @@ func handleExtract(ctx context.Context, cmd *cli.Command) error {
 	for _, bm := range bookmarks {
 		switch {
 		case marks:
-			processMarkups(bm, markPath, out, keep)
+			processMarkups(bm, markPath, out, keep, quality)
 		case highs:
 			processHighlights(bm, out)
 		default:
-			processMarkups(bm, markPath, out, keep)
+			processMarkups(bm, markPath, out, keep, quality)
 			processHighlights(bm, out)
 		}
 	}
@@ -121,7 +127,7 @@ func handleExtract(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func processMarkups(bm *bookmark.Bookmarks, markPath string, out string, keep bool) error {
+func processMarkups(bm *bookmark.Bookmarks, markPath string, out string, keep bool, quality int) error {
 	// If no switch used for markups / highlights we do both (like if there was an --all)
 	wg := sync.WaitGroup{}
 	bookOutDir := filepath.Join(out, bm.Book)
@@ -138,7 +144,7 @@ func processMarkups(bm *bookmark.Bookmarks, markPath string, out string, keep bo
 		for i, m := range bm.Marks() {
 			fmt.Printf("\tBookmark [%d/%d] - Book: %s, \n", i, len(bm.Markups), bm.Book)
 
-			if err := convert.OverlayMarkup(m, markPath, bookOutDir); err != nil {
+			if err := convert.OverlayMarkup(m, markPath, bookOutDir, quality); err != nil {
 				fmt.Println(err)
 			}
 		}

@@ -52,7 +52,7 @@ func svgToRGBA(svgPath string) (image.Image, error) {
 	return img, nil
 }
 
-func OverlayMarkup(m *bookmark.Markup, markPath string, outPath string) error {
+func OverlayMarkup(m *bookmark.Markup, markPath string, outPath string, quality int) error {
 	if !m.HasImagePair(markPath) {
 		return fmt.Errorf("\tThis bookmark does not have both needed Markup files: %s", m.Id)
 	}
@@ -103,10 +103,10 @@ func OverlayMarkup(m *bookmark.Markup, markPath string, outPath string) error {
 
 	imgPath := filepath.Join(outPath, m.Outfile())
 
-	return encode(imgPath, container)
+	return encode(imgPath, container, quality)
 }
 
-func encode(outPath string, img *image.RGBA) error {
+func encode(outPath string, img *image.RGBA, quality int) error {
 	out, err := os.Create(outPath)
 	if err != nil {
 		return fmt.Errorf("Failed to create output file %s: %w", outPath, err)
@@ -114,7 +114,7 @@ func encode(outPath string, img *image.RGBA) error {
 	defer out.Close()
 
 	// encode final image into the output
-	if err := jpeg.Encode(out, img, &jpeg.Options{Quality: 90}); err != nil {
+	if err := jpeg.Encode(out, img, &jpeg.Options{Quality: quality}); err != nil {
 		return fmt.Errorf("jpeg encode failed: %w", err)
 	}
 
