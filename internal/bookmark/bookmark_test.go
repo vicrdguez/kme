@@ -49,6 +49,22 @@ func TestOrderId(t *testing.T) {
 			kind:      sql.NullString{String: `markup`, Valid: true},
 			text:      sql.NullString{String: "", Valid: true},
 		},
+		"big3": {
+			id:        sql.NullString{String: "efe64dca-64e1-4351-a6d9-dc475e7db003", Valid: true},
+			bookTitle: sql.NullString{String: "Your mom", Valid: true},
+			section:   sql.NullString{String: "xhtml/McKe_9780804137393_epub3_c019_r1.xhtml", Valid: true},
+			location:  sql.NullString{String: `span#kobo.93.1`, Valid: true},
+			kind:      sql.NullString{String: `markup`, Valid: true},
+			text:      sql.NullString{String: "", Valid: true},
+		},
+		"small3": {
+			id:        sql.NullString{String: "efe64dca-64e1-4351-a6d9-dc475e7db003", Valid: true},
+			bookTitle: sql.NullString{String: "Your mom", Valid: true},
+			section:   sql.NullString{String: "xhtml/McKe_9780804137393_epub3_c019_r1.xhtml", Valid: true},
+			location:  sql.NullString{String: `span#kobo.22.8`, Valid: true},
+			kind:      sql.NullString{String: `markup`, Valid: true},
+			text:      sql.NullString{String: "", Valid: true},
+		},
 	}
 
 	orderIds := map[string]float64{}
@@ -69,6 +85,13 @@ func TestOrderId(t *testing.T) {
 			"Incorrect order ids. %f should be greater then %f",
 			orderIds["big2"],
 			orderIds["small2"],
+		)
+	}
+	if cmp.Compare(orderIds["big3"], orderIds["small3"]) < 0 {
+		t.Errorf(
+			"Incorrect order ids. %f should be greater then %f",
+			orderIds["big3"],
+			orderIds["small3"],
 		)
 	}
 }
@@ -139,6 +162,12 @@ func TestParseSection(t *testing.T) {
 			want:       "chapter07",
 			numwant:    70.0,
 			in:         sql.NullString{String: "Text/chapter007.html", Valid: true},
+			shouldFail: false,
+		},
+		{
+			want:       "chapter18",
+			numwant:    180.0,
+			in:         sql.NullString{String: "xhtml/McKe_9780804137393_epub3_c018_r1.xhtm", Valid: true},
 			shouldFail: false,
 		},
 		{

@@ -22,7 +22,7 @@ var (
 	// invalidCharsRgx = regexp.MustCompile(`[<>:"/\\|?*\x00-\x1F]`)
 	multiDashRgx = regexp.MustCompile(`-+`)
 	locationRgx  = regexp.MustCompile(`(\\?\d+\\?\.\d+)`)
-	chapterRgx   = regexp.MustCompile(`^(chapter|ch)(\d+)|([a-z]+)(\d+)$`)
+	chapterRgx   = regexp.MustCompile(`(chapter|ch|c)(\d+)|([a-z]+)(\d+)$`)
 )
 
 // Bookmarks are ordered by section and then location. However the location resets with every
