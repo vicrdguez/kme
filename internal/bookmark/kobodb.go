@@ -50,6 +50,9 @@ func (self *KoboDB) fetchBooksWithBookmark() ([]string, error) {
 	`
 
 	rows, err := self.db.Query(query)
+	if err != nil {
+		log.Fatalf("Error executing Books query: %v", err)
+	}
 	defer rows.Close()
 
 	if err != nil {
@@ -86,8 +89,10 @@ func (self *KoboDB) fetchBookmarks(book string) []koboBookmark {
 		log.Fatalf("Error preparing Bookmarks query: %v", err)
 	}
 
-	// bookmarks := make(map[string]Bookmark, 100)
 	rows, err := stmt.Query(book)
+	if err != nil {
+		log.Fatalf("Error executing Bookmarks query: %v", err)
+	}
 	defer rows.Close()
 
 	if err != nil {
